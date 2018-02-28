@@ -39,6 +39,8 @@ public class UserController {
         }
 
         userService.save(userForm);
+        
+        System.out.println(userForm.getUsername());
 
         securityService.autologin(userForm.getUsername(), userForm.getPasswordConfirm());
 
@@ -46,12 +48,14 @@ public class UserController {
     }
 
     @RequestMapping(value = "/login", method = RequestMethod.GET)
-    public String login(Model model, String error, String logout) {
+    public String login(@ModelAttribute("userForm") User userForm, Model model, String error, String logout) {
         if (error != null)
             model.addAttribute("error", "Your username and password is invalid.");
 
         if (logout != null)
             model.addAttribute("message", "You have been logged out successfully.");
+        
+        System.out.println(userForm.getUsername());
 
         return "login";
     }

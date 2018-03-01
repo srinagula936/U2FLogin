@@ -42,7 +42,7 @@ import java.util.Map;
 @Produces(MediaType.TEXT_HTML)
 public class Resource {
 
-    public static final String APP_ID = "https://localhost:8443";
+    public static final String APP_ID = "https://localhost:8080";
 
     private final Map<String, String> requestStorage = new HashMap<String, String>();
     private final LoadingCache<String, Map<String, String>> userStorage = CacheBuilder.newBuilder().build(new CacheLoader<String, Map<String, String>>() {
@@ -54,9 +54,10 @@ public class Resource {
     private final U2F u2f = new U2F();
     private final MetadataService metadataService = new MetadataService();
 
-    @Path("startRegistration")
+    //@Path("startRegistration")
     @GET
-    public View startRegistration(@QueryParam("username") String username) throws U2fBadConfigurationException, U2fBadInputException {
+    public View startRegistration(String username) throws U2fBadConfigurationException, U2fBadInputException {
+    	System.out.println("username inside startRegistration " +username);
         RegisterRequestData registerRequestData = u2f.startRegistration(APP_ID, getRegistrations(username));
         requestStorage.put(registerRequestData.getRequestId(), registerRequestData.toJson());
         return new RegistrationView(registerRequestData.toJson(), username);

@@ -18,7 +18,7 @@ public class RegistrationView extends View {
     }
 
     public RegistrationView(String data, String username) {
-        super("register.ftl");
+        super("u2fRegister.jsp");
         this.data = checkNotNull(data);
         this.username = checkNotNull(username);
     }

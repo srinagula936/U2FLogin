@@ -3,7 +3,11 @@ package com.harsha.account.web;
 import com.harsha.account.model.User;
 import com.harsha.account.service.SecurityService;
 import com.harsha.account.service.UserService;
+import com.harsha.account.u2f.Resource;
 import com.harsha.account.validator.UserValidator;
+
+import javax.ws.rs.QueryParam;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,14 +26,24 @@ public class UserController {
 
     @Autowired
     private UserValidator userValidator;
+    
+    private Resource resource;
 
     @RequestMapping(value = "/registration", method = RequestMethod.GET)
     public String registration(Model model) {
         model.addAttribute("userForm", new User());
+        model.addAttribute("username", new String());
 
         return "registration";
     }
+    
+/*    @RequestMapping(value = "/u2fRegister", method = RequestMethod.GET)
+    public String u2fRegister(Model model) {
+        model.addAttribute("username", new String());
 
+        return "u2fRegister";
+    }*/
+    
     @RequestMapping(value = "/registration", method = RequestMethod.POST)
     public String registration(@ModelAttribute("userForm") User userForm, BindingResult bindingResult, Model model) {
         userValidator.validate(userForm, bindingResult);
@@ -64,4 +78,19 @@ public class UserController {
     public String welcome(Model model) {
         return "welcome";
     }
+    
+    @RequestMapping(value = "/u2fRegister", method = RequestMethod.GET)
+    public String u2fRegister(@ModelAttribute("username") User userForm, BindingResult bindingResult, Model model){
+    	System.out.println("inside u2fRegister");
+    	System.out.println("username is" + userForm.getUsername());
+    	String username = userForm.getUsername();
+    	try {
+    		resource.startRegistration(username);
+    	}
+    	catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
 }

@@ -34,6 +34,24 @@
         <h2>Welcome ${pageContext.request.userPrincipal.name} | <a onclick="document.forms['logoutForm'].submit()">Logout</a></h2>
 
     </c:if>
+    
+<%--     <div>
+    <form method="GET" action="/startAuthentication" id="form">
+	    <label for="username">Username</label>
+	    <input name="username" id="username" autofocus/><h4 class="text-left"><a href="${contextPath}/u2fRegister">Register your u2f device</a></h4>
+	</form>
+	</div> --%>
+	
+	<form method="GET" action="${contextPath}/u2fRegister" class="form-signin">
+        <h2 class="form-heading">u2fRegister</h2>
+
+        <div class="form-group ${error != null ? 'has-error' : ''}">
+            <input name="username" type="text" class="form-control" placeholder="Username"
+                   autofocus="true"/>
+            <button class="btn btn-lg btn-primary btn-block" type="submit">Register your device</button>
+        </div>
+
+    </form>
 
 </div>
 <!-- /container -->

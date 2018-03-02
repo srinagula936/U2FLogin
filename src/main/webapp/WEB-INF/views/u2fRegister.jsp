@@ -9,8 +9,17 @@
 <script src="${contextPath}/resources/js/u2f-api-1.1.js"></script>
 
 <script>
-var request = ${data};
+<%HttpSession sess = request.getSession(true);
+	session.getAttribute("data");%>
+var json = '<%= session.getAttribute("data") %>';
+var request = JSON.parse(json);
+console.log("request is " +request);
+console.log("request appId " +request.appId);
+console.log("request registeredKeys " +request.registeredKeys);
 setTimeout(function() {
+	console.log("request appId inside setTimeout" + " " +request.appId);
+	console.log("request appId inside setTimeout" + " " +request.registeredKeys.length);
+	console.log("request appId inside setTimeout" + " " +request.registerRequests.length);
     u2f.register(
         request.appId,
         request.registerRequests,
@@ -37,19 +46,12 @@ setTimeout(function() {
 }, 1000);
 </script>
 </head>
-<!-- <body>
 
-<form method="GET" action="/startRegistration" id="form">
-    <label for="username">Username</label>
-    <input name="username" id="username" autofocus/>
-    <button type="Submit">Register</button>
-</form>
-
-</body> -->
     <body>
-    <p>Touch your U2F token.</p>
-        <form method="POST" action="finishRegistration" id="form" onsubmit="return false;">
-            <input type="hidden" name="username" value="${username}"/>
+    <p>Touch your U2F token to register.</p>
+    	<b><%= request.getParameter("username") %></b>
+        <form method="POST" action="u2fFinishRegistration" id="form" onsubmit="return false;">
+            <input type="hidden" name="username" value="<%= request.getParameter("username") %>"/>
             <input type="hidden" name="tokenResponse" id="tokenResponse"/>
         </form>
     </body>

@@ -8,15 +8,14 @@ import com.harsha.account.service.SecurityService;
 import com.harsha.account.service.UserService;
 import com.harsha.account.u2f.Resource;
 import com.harsha.account.validator.UserValidator;
-import com.harsha.account.view.AuthenticationView;
-import com.harsha.account.view.RegistrationView;
 import com.yubico.u2f.U2F;
 import com.yubico.u2f.data.DeviceRegistration;
 import com.yubico.u2f.data.messages.RegisterRequestData;
 import com.yubico.u2f.exceptions.U2fBadConfigurationException;
 import com.yubico.u2f.exceptions.U2fBadInputException;
-
-import io.dropwizard.views.View;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpServletRequest;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,8 +48,7 @@ public class UserController {
     @RequestMapping(value = "/registration", method = RequestMethod.GET)
     public String registration(Model model) {
         model.addAttribute("userForm", new User());
-        model.addAttribute("username", new String());
-
+        
         return "registration";
     }
     
@@ -74,8 +72,6 @@ public class UserController {
         }
 
         userService.save(userForm);
-        
-        System.out.println(userForm.getUsername());
 
         securityService.autologin(userForm.getUsername(), userForm.getPasswordConfirm());
 
@@ -90,32 +86,33 @@ public class UserController {
         if (logout != null)
             model.addAttribute("message", "You have been logged out successfully.");
         
-        System.out.println(userForm.getUsername());
-
         return "login";
     }
 
     @RequestMapping(value = {"/", "/welcome"}, method = RequestMethod.GET)
     public String welcome(Model model) {
+    	
         return "welcome";
     }
     
     @RequestMapping(value = "/u2fRegister", method = RequestMethod.GET)
-    public View u2fRegister(@ModelAttribute("username") User userForm, BindingResult bindingResult, Model model) throws U2fBadConfigurationException, U2fBadInputException{
+    public String u2fRegister(User userForm, BindingResult bindingResult, Model model, HttpServletRequest request, HttpServletResponse response) throws U2fBadConfigurationException, U2fBadInputException{
     	System.out.println("inside u2fRegister");
     	System.out.println("username is" + userForm.getUsername());
+    	HttpSession session = request.getSession();
     	String username = userForm.getUsername();
     	RegisterRequestData registerRequestData = u2f.startRegistration(APP_ID, getRegistrations(username));
         requestStorage.put(registerRequestData.getRequestId(), registerRequestData.toJson());
-    	return new RegistrationView(registerRequestData.toJson(), username);
+        session.setAttribute("data", registerRequestData.toJson());
+        System.out.println(registerRequestData.toJson());
+        return "u2fRegister";
     }
     
-    @GET
-    public View startRegistration(String username) throws U2fBadConfigurationException, U2fBadInputException {
-    	System.out.println("username inside startRegistration " +username);
-    	RegisterRequestData registerRequestData = u2f.startRegistration(APP_ID, getRegistrations(username));
-        requestStorage.put(registerRequestData.getRequestId(), registerRequestData.toJson());
-    	return new RegistrationView(registerRequestData.toJson(), username);
+    @RequestMapping(value = "/u2fRegister", method = RequestMethod.POST)
+    public String u2fFinishRegistration(User userForm, BindingResult bindingResult, Model model, HttpServletRequest request, HttpServletResponse response) throws U2fBadConfigurationException, U2fBadInputException{
+    	System.out.println("inside u2fFinishRegistration");
+    	return null;
+    	
     }
     
     private Iterable<DeviceRegistration> getRegistrations(String username) throws U2fBadInputException {

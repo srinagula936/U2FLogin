@@ -28,7 +28,7 @@
 			<attribute name="org.eclipse.jst.component.dependency" value="/WEB-INF/lib"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/snagula/Downloads/u2flib-server-core-0.19.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/snagula/Downloads/u2flib-server-core-0.19.0.jar" sourcepath="C:/Users/snagula/Downloads/u2flib-server-core-0.19.0.jar"/>
 	<classpathentry kind="lib" path="C:/Users/snagula/Downloads/u2flib-server-attestation-0.18.0.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

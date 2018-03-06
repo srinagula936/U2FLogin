@@ -50,9 +50,13 @@ setTimeout(function() {
     <body>
     <p>Touch your U2F token to register.</p>
     	<b><%= request.getParameter("username") %></b>
-        <form method="POST" action="u2fFinishRegistration" id="form" onsubmit="return false;">
+<%--         <form method="POST" action="u2fFinishRegistration" id="form" onsubmit="return false;">
             <input type="hidden" name="username" value="<%= request.getParameter("username") %>"/>
             <input type="hidden" name="tokenResponse" id="tokenResponse"/>
-        </form>
+        </form> --%>
+        <form method="POST" action="${contextPath}/u2fFinishRegister" id="form" onsubmit="return false;">
+            <input type="hidden" name="username" value="<%= request.getParameter("username") %>"/>
+            <input type="hidden" name="tokenResponse" id="tokenResponse"/>
+    	</form>
     </body>
 </html>

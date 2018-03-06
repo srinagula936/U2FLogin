@@ -6,24 +6,26 @@ import com.google.common.cache.LoadingCache;
 import com.harsha.account.model.User;
 import com.harsha.account.service.SecurityService;
 import com.harsha.account.service.UserService;
-import com.harsha.account.u2f.Resource;
 import com.harsha.account.validator.UserValidator;
 import com.yubico.u2f.U2F;
+import com.yubico.u2f.attestation.Attestation;
+import com.yubico.u2f.attestation.MetadataService;
 import com.yubico.u2f.data.DeviceRegistration;
 import com.yubico.u2f.data.messages.RegisterRequestData;
+import com.yubico.u2f.data.messages.RegisterResponse;
 import com.yubico.u2f.exceptions.U2fBadConfigurationException;
 import com.yubico.u2f.exceptions.U2fBadInputException;
+import com.yubico.u2f.exceptions.U2fRegistrationException;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpServletRequest;
 
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.QueryParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -42,8 +44,6 @@ public class UserController {
 
     @Autowired
     private UserValidator userValidator;
-    
-    private Resource resource;
 
     @RequestMapping(value = "/registration", method = RequestMethod.GET)
     public String registration(Model model) {
@@ -53,6 +53,7 @@ public class UserController {
     }
     
     private final U2F u2f = new U2F();
+    private final MetadataService metadataService = new MetadataService();
     public static final String APP_ID = "https://localhost:8080";
     private final Map<String, String> requestStorage = new HashMap<String, String>();
     
@@ -108,9 +109,19 @@ public class UserController {
         return "u2fRegister";
     }
     
-    @RequestMapping(value = "/u2fRegister", method = RequestMethod.POST)
-    public String u2fFinishRegistration(User userForm, BindingResult bindingResult, Model model, HttpServletRequest request, HttpServletResponse response) throws U2fBadConfigurationException, U2fBadInputException{
+    @RequestMapping(value = "/u2fFinishRegister", method = RequestMethod.POST)
+    public String u2fFinishRegistration(User userForm, BindingResult bindingResult, Model model, HttpServletRequest request) throws U2fBadConfigurationException, U2fBadInputException, U2fRegistrationException, CertificateException{
     	System.out.println("inside u2fFinishRegistration");
+    	String response = request.getParameter("tokenResponse");
+    	String username = request.getParameter("username");
+        RegisterResponse registerResponse = RegisterResponse.fromJson(response);
+        RegisterRequestData registerRequestData = RegisterRequestData.fromJson(requestStorage.remove(registerResponse.getRequestId()));
+        DeviceRegistration registration = u2f.finishRegistration(registerRequestData, registerResponse);
+
+        Attestation attestation = metadataService.getAttestation(registration.getAttestationCertificate());
+
+        addRegistration(username, registration);
+        
     	return null;
     	
     }
@@ -121,6 +132,10 @@ public class UserController {
             registrations.add(DeviceRegistration.fromJson(serialized));
         }
         return registrations;
+    }
+    
+    private void addRegistration(String username, DeviceRegistration registration) {
+        userStorage.getUnchecked(username).put(registration.getKeyHandle(), registration.toJson());
     }
        
 }

@@ -54,7 +54,7 @@ public class UserController {
     
     private final U2F u2f = new U2F();
     private final MetadataService metadataService = new MetadataService();
-    public static final String APP_ID = "https://localhost:8080";
+    public static final String APP_ID = "https://localhost:8443";
     private final Map<String, String> requestStorage = new HashMap<String, String>();
     
     private final LoadingCache<String, Map<String, String>> userStorage = CacheBuilder.newBuilder().build(new CacheLoader<String, Map<String, String>>() {

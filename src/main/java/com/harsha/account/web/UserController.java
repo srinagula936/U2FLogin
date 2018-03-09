@@ -7,6 +7,12 @@ import com.harsha.account.model.User;
 import com.harsha.account.service.SecurityService;
 import com.harsha.account.service.UserService;
 import com.harsha.account.validator.UserValidator;
+import com.google.common.collect.HashMultimap;
+import com.yubico.client.v2.ResponseStatus;
+import com.yubico.client.v2.VerificationResponse;
+import com.yubico.client.v2.YubicoClient;
+import com.yubico.client.v2.exceptions.YubicoValidationFailure;
+import com.yubico.client.v2.exceptions.YubicoVerificationException;
 import com.yubico.u2f.U2F;
 import com.yubico.u2f.attestation.Attestation;
 import com.yubico.u2f.attestation.MetadataService;
@@ -18,6 +24,7 @@ import com.yubico.u2f.exceptions.U2fBadInputException;
 import com.yubico.u2f.exceptions.U2fRegistrationException;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.ws.rs.FormParam;
 import javax.servlet.http.HttpServletRequest;
 
 import java.security.cert.CertificateException;
@@ -33,6 +40,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class UserController {
@@ -63,6 +71,12 @@ public class UserController {
             return new HashMap<String, String>();
         }
     });
+    
+    //Yubico Client details
+    public static final int CLIENT_ID = 36982;
+    public static final String API_KEY = "LWaeGBDHkWOE+o2sCB2h1t+F1vM=\r\n";
+    private final YubicoClient client = YubicoClient.getClient(CLIENT_ID, API_KEY);
+    private final HashMultimap<String, String> yubikeyIds = HashMultimap.create();
     
     @RequestMapping(value = "/registration", method = RequestMethod.POST)
     public String registration(@ModelAttribute("userForm") User userForm, BindingResult bindingResult, Model model) {
@@ -98,20 +112,20 @@ public class UserController {
     
     @RequestMapping(value = "/u2fRegister", method = RequestMethod.GET)
     public String u2fRegister(User userForm, BindingResult bindingResult, Model model, HttpServletRequest request, HttpServletResponse response) throws U2fBadConfigurationException, U2fBadInputException{
-    	System.out.println("inside u2fRegister");
+/*    	System.out.println("inside u2fRegister");
     	System.out.println("username is" + userForm.getUsername());
     	HttpSession session = request.getSession();
     	String username = userForm.getUsername();
     	RegisterRequestData registerRequestData = u2f.startRegistration(APP_ID, getRegistrations(username));
         requestStorage.put(registerRequestData.getRequestId(), registerRequestData.toJson());
         session.setAttribute("data", registerRequestData.toJson());
-        System.out.println(registerRequestData.toJson());
+        System.out.println(registerRequestData.toJson());*/
         return "u2fRegister";
     }
     
     @RequestMapping(value = "/u2fFinishRegister", method = RequestMethod.POST)
-    public String u2fFinishRegistration(User userForm, BindingResult bindingResult, Model model, HttpServletRequest request) throws U2fBadConfigurationException, U2fBadInputException, U2fRegistrationException, CertificateException{
-    	System.out.println("inside u2fFinishRegistration");
+    public String u2fFinishRegistration(User userForm, BindingResult bindingResult, Model model, HttpServletRequest request, @RequestParam("otp") String otp) throws U2fBadConfigurationException, U2fBadInputException, U2fRegistrationException, CertificateException, YubicoVerificationException, YubicoValidationFailure{
+/*    	System.out.println("inside u2fFinishRegistration");
     	String response = request.getParameter("tokenResponse");
     	String username = request.getParameter("username");
         RegisterResponse registerResponse = RegisterResponse.fromJson(response);
@@ -120,10 +134,19 @@ public class UserController {
 
         Attestation attestation = metadataService.getAttestation(registration.getAttestationCertificate());
 
-        addRegistration(username, registration);
-        
-    	return null;
+        addRegistration(username, registration);*/
     	
+    	String username = userForm.getUsername();
+    	
+    	System.out.println("otp");
+        VerificationResponse response = client.verify(otp);
+        if (response.isOk()) {
+            String yubikeyId = YubicoClient.getPublicId(otp);
+            yubikeyIds.put(username, yubikeyId);
+            return "welcome";
+        }
+        return "Invalid OTP: " + response;
+        
     }
     
     private Iterable<DeviceRegistration> getRegistrations(String username) throws U2fBadInputException {
